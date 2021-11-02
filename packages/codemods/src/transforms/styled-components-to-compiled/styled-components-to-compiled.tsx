@@ -1,4 +1,12 @@
-import type { FileInfo, API, Options, Program } from 'jscodeshift';
+import type {
+  FileInfo,
+  API,
+  JSCodeshift,
+  Options,
+  Program,
+  Collection,
+  TaggedTemplateExpression,
+} from 'jscodeshift';
 
 import {
   hasImportDeclaration,
@@ -14,6 +22,40 @@ const imports = {
   compiledStyledImportName: 'styled',
   styledComponentsSupportedImportNames: ['css'],
   styledComponentsPackageName: 'styled-components',
+};
+
+const convertStyledAttrs = ({
+  j,
+  plugins,
+  templateExpressions,
+}: {
+  j: JSCodeshift;
+  plugins: CodemodPluginInstance[];
+  templateExpressions: Collection<TaggedTemplateExpression>;
+}) => {
+  templateExpressions.forEach((templateExpression) => {
+    const styledTagName = 'input';
+
+    const newExpressions = j.taggedTemplateExpression(
+      j.memberExpression(j.identifier('styled'), j.identifier(styledTagName)),
+      templateExpression.value.quasi
+    );
+
+    j(templateExpression).replaceWith(newExpressions);
+  });
+
+  // convert attr declartation into the regular declration
+  /// create definition
+  /// extract style props
+  /// merge styles
+
+  // replace original
+
+  // create wrapper with rest props
+
+  // append after with the component name
+
+  return { j, plugins, templateExpressions };
 };
 
 const transformer = (fileInfo: FileInfo, api: API, options: Options): string => {
@@ -52,6 +94,21 @@ const transformer = (fileInfo: FileInfo, api: API, options: Options): string => 
     defaultSourceSpecifierName: imports.compiledStyledImportName,
     allowedImportSpecifierNames: imports.styledComponentsSupportedImportNames,
   });
+
+  const templateExpressions = collection.find(
+    j.TaggedTemplateExpression,
+    ({ tag: expression }) =>
+      expression.callee.object.object.name === 'styled' &&
+      expression.callee.property.name === 'attrs'
+  );
+
+  if (templateExpressions.length) {
+    convertStyledAttrs({
+      j,
+      plugins,
+      templateExpressions,
+    });
+  }
 
   applyVisitor({
     plugins,
