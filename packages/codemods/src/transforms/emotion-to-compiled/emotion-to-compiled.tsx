@@ -23,7 +23,7 @@ import {
   mergeImportSpecifiersAlongWithTheirComments,
   addCommentBefore,
   withPlugin,
-} from '../../codemods-helpers';
+} from '../../helpers/main';
 import defaultCodemodPlugin from '../../plugins/default';
 import type { CodemodPluginInstance } from '../../plugins/types';
 
